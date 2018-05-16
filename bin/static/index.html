@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html ng-app="CouponApp" ng-controller="CouponController as p">
+<head>
+<meta charset="windows-1255">
+<script type="text/javascript" src="js/angular.min.js"></script>
+<script type="text/javascript" src="js/angular-resource.min.js"></script>
+<script type="text/javascript" src="js/coupons.js"></script>
+
+<link rel="stylesheet" href="css/coupons.css"/>
+
+<title>Coupon System</title>
+</head>
+<body>
+<div id = "page-wrap" ng-app="CouponApp" ng-controller="CouponController as p">
+<h1 class="main">OJB Coupon System</h1>
+
+<div id="loginForm" class=form ng-hide="p.isLoggedIn">
+	<label class = "strokeText">Username: <input class="textbox" ng-model="p.user.username" placeholder="Enter username here"/></label><br/>
+	<label class = "strokeText">Password: &nbsp;<input type="password" class="textbox" ng-model="p.user.password" type="password"/></label><br/>
+
+	<button id="loginButton" class="submitbutton bottomRightPos" ng-click="p.loginBtn()">Log In</button>
+	Client Type: 	<select class="combobox" ng-model="p.client.type"> 
+  <option value="1" ng-model="p.client.type">Customer</option>
+  <option value="2" ng-model="p.client.type">Company</option>
+  <option value="3" ng-model="p.client.type">Admin</option>
+  </select> 
+  </br><span class = "smallText">*Default Login is customer</span>
+</div>
+<div ng-show="p.isAdmin">
+<div class = "header upperCenterPos">
+	<h2>{{p.user.username}}, Welcome to the Coupon System</h4>
+	<h3>As an admin, you can create, view, update and delete new companies and customers,<br> as well as view income from specific customers or companies,<br> or view the total income.</h2>
+</div>
+<div class = "upperCenterPos">
+	<button class = "catalogueBtn upperCenterPos" ng-click="p.showComps()">Companies Panel</button>
+</div>
+	
+<div class = "listContainer" ng-show="p.adminShowComps">
+	<ul>
+	<span class = "searchBox">
+	 <label>Search For Company Name: </label> <input type = "text" ng-model = "compName" />
+	</span>
+	 	<button class = "submitbutton" ng-click = "p.adminCompPreviousPage()">Previous Page</button><button class = "submitbutton" ng-click = "p.adminCompNextPage()">Next Page</button>
+<div class = "errorMessage">{{p.pageError}}</div>
+	<br>
+	
+		<li class= "listBox" ng-repeat="company in p.allCompanies | filter: compName">
+		Company ID:	{{company.id}} || Company Name: {{company.compName}} || Company Email Address: {{company.email}}
+			<button class = "submitbutton bottomRightPos" ng-click="p.removeCompany(company)">Remove</button>
+			<button class = "submitbutton bottomRightPos" ng-click="p.toggleUpdateCompany(company)">Update</button>
+			<div class = "update" ng-show="company.edit">
+			<br>
+				<label class = "pad">New Password: <input ng-model="company.password"/></label>
+				<label>New Email: <input ng-model="company.email"/></label><br>
+				<button class = "submitbutton bottomRightPos botpad" ng-click="p.invokeUpdateCompany(company)">Update Company</button>
+				<button  class = "submitbutton bottomRightPos botpad" ng-click="p.loadCompany(company)">Refresh Company </button>
+				<br>
+			</div>
+		</li>
+	</ul>
+</div>
+<div class = "spaceFiller"></div>
+<div class = "upperCenterPos">
+<button class = "catalogueBtn" ng-click="p.createCompany()">Create Company</button>
+</div>
+	<div id="newCompanyForm" class="form upperCenterPos" ng-show="p.showNewCompForm">
+		<h3 class = "strokeText">Create a new Company: </h3>
+		&nbsp; &nbsp;	&nbsp;	&nbsp;<label class = "strokeText">name: <input ng-model="p.Company.compName"/></label><br/>
+		<label class = "strokeText">password: <input ng-model="p.Company.password"/></label><br/>
+	&nbsp;	&nbsp;	&nbsp;	&nbsp;<label class = "strokeText">email: <input ng-model="p.Company.email"/></label><br/>
+		<button class = "submitbutton"  ng-click="p.invokeCreateCompany()">Create</button>
+		<div class="infoMessage">{{p.createCompInfo}}</div>
+		<div class="errorMessage">{{p.createCompError}}</div>
+	</div>
+	<div class = "spaceFiller">
+	</div>
+	<div class = "upperCenterPos">
+	<button class = "catalogueBtn" ng-click="p.showCusts()">Customers Panel</button>
+	</div>
+	<div class = "listContainer" ng-show="p.adminShowCusts">
+	<ul>
+	
+	<span class = "searchBox">
+	<label>Search For Customer Name:  <input type = "text" ng-model = "custName" /></label></span>
+		 	<button class = "submitbutton" ng-click = "p.adminCustPreviousPage()">Previous Page</button><button class = "submitbutton" ng-click = "p.adminCustNextPage()">Next Page</button>
+<div class="errorMessage">{{p.pageCustError}}</div>
+		<li class= "listBox" ng-repeat="customer in p.allCustomers | filter: custName">
+		Customer ID:	{{customer.id}} || Customer Name: {{customer.custName}}
+			<button class = "submitbutton bottomRightPos" ng-click="p.removeCustomer(customer)">Remove</button>
+			<button class = "submitbutton bottomRightPos" ng-click="p.toggleUpdateCustomer(customer)">Update</button>
+			<div ng-show="customer.edit">
+				<label>New Password: <input ng-model="customer.password"/></label>
+				<button class = "submitbutton" ng-click="p.invokeUpdateCustomer(customer)">Update Customer: #{{customer.id}}</button>
+				<button  class = "submitbutton" ng-click="p.loadCustomer(customer)">Refresh Customer #{{customer.id}}</button>
+			</div>
+		</li>
+	</ul>
+	</div>
+	<div class = "spaceFiller"></div>
+<div class = "upperCenterPos">
+<button class = "catalogueBtn" ng-click="p.createCustomer()">Create Customer</button>
+</div>
+	<div id="newCustomerForm" class="form upperCenterPos" ng-show="p.showNewCustForm">
+	<h3>Create a new Customer: </h3>
+		&nbsp;	&nbsp;	&nbsp;	<label>name: <input ng-model="p.Customer.custName"/></label><br/>
+		<label>password: <input ng-model="p.Customer.password"/></label><br/>
+		<button class = "submitbutton"  ng-click="p.invokeCreateCustomer()">Create</button>
+		<div class="infoMessage">{{p.createCustInfo}}</div>
+		<div class="errorMessage">{{p.createCustError}}</div>
+	</div>
+	<div class = "spaceFiller"></div>
+	<div class = "upperCenterPos">
+	<button class = "catalogueBtn" ng-click = "p.adminIncomeBtn()">Income Sheet</button>
+	</div>
+		<div id = "income" class = "listContainer" ng-show="p.showIncome">
+		<div class ="upperCenterPos"><button class = "catalogueBtn" ng-click = "p.getCustomerIncome()">Get Income</button></div><br>
+	<span class = "searchBox">
+	<label>Type In Customer ID:<input type="number" ng-model="p.adminIncome.byCustomer"/>{{p.CustIncome.byCustomer}} </label></br>
+	</span>
+	<span class = "searchBox">
+	<label>Type In Company ID:<input type="number" ng-model="p.adminIncome.byCompany"/>{{p.CustIncome.byCustomer}} </label></br>
+	</span>
+	<li class= "listBox upperCenterPos botpad" ng-repeat="income in p.allCustomerIncome">
+		Income ID:	{{income.id}}|| Income Customer ID: {{income.invokerId}} || Income Date: {{income.timestamp | date:'yyyy-MM-dd HH:mm:ss'}} || Income Amount: {{income.amount}} || Type: {{income.type}}
+	</div>
+	<button class = "submitbutton bottomRightPos" ng-click="p.adminLogout()">Log Out</button>
+</div>
+
+<div ng-show = "p.isCompany">
+<div class = "header upperCenterPos">
+	<h2>{{p.user.username}}, Welcome to the Coupon System.</h2><h3><br> As a Company, you are able to view, update, and remove <br> all coupons owned by you. Additionally, you can create new coupons <br>and view your Payment History.</h3>
+</div>
+	<div class = "upperCenterPos">
+	<button class = "catalogueBtn" ng-click="p.manageCpnBtn()">Manage Coupons</button>
+	<span class = "largeFont">	Type: </span><select class = "combobox" ng-model=p.comparams.byType> 
+  <option value="RESTAURANTS" ng-model="p.comparams.byType">Restaurants</option>
+  <option value="ELECTRICITY" ng-model="p.comparams.byType">Electricity</option>
+  <option value="FOOD" ng-model="p.comparams.byType">Food</option>
+  <option value="HEALTH" ng-model="p.comparams.byType">Health</option>
+  <option value="SPORTS" ng-model="p.comparams.byType">Sports</option>
+  <option value="CAMPING" ng-model="p.comparams.byType">Camping</option>
+  <option value="TRAVELLING" ng-model="p.comparams.byType">Travelling</option>
+  <option value="SHOPPING" ng-model="p.comparams.byType">Shopping</option>
+  <option value="STYLE" ng-model="p.comparams.byType">Style</option>
+  <option value="KITCHEN" ng-model="p.comparams.byType">Kitchen</option>
+  <option value="TECH" ng-model="p.comparams.byType">Tech</option>
+  <option value="" ng-model="p.comparams.byType">All</option>
+		</select>
+	<span class = "smallInput">
+		<input type ="number" ng-model="p.comparams.byPrice"> 
+	</span>
+		*You can either filter by type OR by price.
+	</div>
+<div class = "listContainer" ng-show="p.isManageCpnPressed">
+<button class = "catalogueBtn" ng-click = "p.hideCompanyCoupons()">Hide</button>
+	<ul>
+	<span class = "searchBox"><label>Search For Coupon Title: </label> <input type = "text" ng-model = "title" /></span> 
+	<button class = "submitbutton" ng-click = "p.compCpnPreviousPage()">Previous Page</button><button class = "submitbutton" ng-click = "p.compCpnNextPage()">Next Page</button>
+	<br><span class = "errorMessage">{{p.pageError}}</span>
+		<div class= "listBox" ng-repeat="coupon in p.allCompanyCoupons | filter: title">
+		Coupon ID:	{{coupon.id}} || Coupon Title: {{coupon.title}} || Coupon Type: {{coupon.type}} || Coupon Start Date: {{coupon.startDate | date:'yyyy-MM-dd'}} || Coupon End Date: {{coupon.endDate | date:'yyyy-MM-dd'}} Coupon Price: {{coupon.price}}
+		<img class = "couponImage" src="{{coupon.image}}" > 
+			<button class = "submitbutton bottomRightPos" ng-click="p.removeCoupon(coupon)">Remove</button>
+			<button class = "submitbutton bottomRightPos" ng-click="p.toggleUpdateCoupon(coupon)">Update</button>
+			<div class = "collapse" ng-show="coupon.edit">
+				<label>New End Date: <input type="date" ng-model="coupon.endDate"/></label>
+				<label>New Price: <input ng-model="coupon.price"/></label>
+				<button class = "submitbutton bottomRightPos" ng-click="p.invokeUpdateCoupon(coupon)">Update coupon: #{{coupon.id}}</button>
+				<button  class = "submitbutton bottomRightPos" ng-click="p.loadCoupon(coupon)">Refresh Coupon #{{coupon.id}}</button>
+			</div>
+		</div>
+	</ul>
+</div>
+	<div class = "spaceFiller"></div>
+	<hr/>
+	
+	<div class ="upperCenterPos"><button class = "catalogueBtn upperCenterPos" ng-click="p.createCpn()">Create New Coupon</button></div>
+	<div id="newCouponForm" class="form upperCenterPos" ng-show="p.showCreateCpn">
+		<label>*Title: <input placeholder="Coupon Title..." ng-model="p.Coupon.title"/></label><br/>
+		<label>*Amount: <input type = "number" ng-model="p.Coupon.amount"/></label><br/>
+		<label>*Price: <input type="number" ng-model="p.Coupon.price"/></label><br/>
+		<label>Message: <input ng-model="p.Coupon.message"/></label><br/>
+		<label>*Start Date: <input class = "dateInput" type="date" ng-model="p.Coupon.startDate"/></label>
+		<label>*End Date: <input class = "dateInput" type="date" ng-model="p.Coupon.endDate"/></label><br/>
+		<button class = "submitbutton bottomRightPos"  ng-click="p.invokeCreateCoupon()">Create</button>
+		
+		<div id="newCouponSelect">
+	*Image: 	<select class="combobox" ng-model=p.Coupon.image> 
+  <option value="images/defaultCoupon.jpg" ng-model="p.Coupon.image">Default</option>
+  <option value="images/Health.jpg" ng-model="p.Coupon.image">Health</option>
+  <option value="images/mouseicon.ico" ng-model="p.Coupon.image">Electronics</option>
+  <option value="images/Tech.jpg" ng-model="p.Coupon.image">Tech</option>
+  <option value="images/Hamburger.jpg" ng-model="p.Coupon.image">Hamburger</option>
+  <option value="images/Pasta.jpg" ng-model="p.Coupon.image">Pasta</option>
+  <option value="images/Sushi.jpg" ng-model="p.Coupon.image">Sushi</option>
+  <option value="images/Hut.jpg" ng-model="p.Coupon.image">Village</option>
+  <option value="images/beach.jpg" ng-model="p.Coupon.image">Beach</option>
+  <option value="images/fashion.jpg" ng-model="p.Coupon.image">Fashion</option>
+  <option value="images/ps4.jpg" ng-model="p.Coupon.image">PlayStation 4</option>
+  <option value="images/bananaPhone.jpg" ng-model="p.Coupon.image">Banana</option>
+</select>
+		</div>
+
+*Type: <select class = "combobox" ng-model=p.Coupon.type> 
+  <option value="RESTAURANTS" ng-model="p.Coupon.type">Restaurants</option>
+  <option value="ELECTRICITY" ng-model="p.Coupon.type">Electricity</option>
+  <option value="FOOD" ng-model="p.Coupon.type">Food</option>
+  <option value="HEALTH" ng-model="p.Coupon.type">Health</option>
+  <option value="SPORTS" ng-model="p.Coupon.type">Sports</option>
+  <option value="CAMPING" ng-model="p.Coupon.type">Camping</option>
+  <option value="TRAVELLING" ng-model="p.Coupon.type">Travelling</option>
+  <option value="SHOPPING" ng-model="p.Coupon.type">Shopping</option>
+  <option value="STYLE" ng-model="p.Coupon.type">Style</option>
+  <option value="KITCHEN" ng-model="p.Coupon.type">Kitchen</option>
+  <option value="TECH" ng-model="p.Coupon.type">Tech</option>
+		</select>
+		</div>
+		<div class="spaceFiller"></div>
+		<div class = "upperCenterPos">
+		<button class = "catalogueBtn upperCenterPos" ng-click="p.compIncBtn()">View Payments</button>
+		</div>
+		<div class = "listContainer" ng-show ="p.showCompInc">
+		<li class = "listBox" ng-repeat="income in p.compIncome">
+		<label>
+		Payment Details:</br>
+		</label>
+<label>
+		ID: {{income.id}} || Payment Type: {{income.type}} || Time: {{income.timestamp | date: 'yyyy-MM-dd HH:mm:ss' }} || Amount Spent: {{income.amount}}
+</label>
+</li>	
+		</div>
+	</br>
+	<button class = "submitbutton posRight" ng-click="p.companyLogout()">Log Out</button>
+		</div>	
+		
+		
+		<div ng-show = "p.isCustomer" class = "upperCenterPos">
+		<div class = "header">
+		<h2>{{p.user.username}}, Welcome To The Coupon Shop</h4>
+		<h3>As a customer, you are able to <br> browse & purchase Coupons, as well as view <br> your past purchases and payment history.</h2>
+		</div>
+	<button class = "catalogueBtn upperCenterPos" ng-click="p.showAllCpnBtn()" >Coupon Catalogue</button>
+	<div ng-show="p.showPurchaseDiv" class = "customerShoppingContainer">
+	<button class = "catalogueBtn upperCenterPos" ng-click=" p.hideAllCoupons()">Hide</button>
+	<button class = "submitbutton rightpagebutton" ng-click=" p.allCouponsNextPage()">Next Page</button>
+	<button class = "submitbutton leftpagebutton" ng-click=" p.allCouponsPreviousPage()">Previous Page</button>
+	<button class = "catalogueBtn upperCenterPos" ng-click="  p.loadAllCoupons()">Search</button>
+	<div class = "upperCenterPos">
+	<span class = "largeFont">	Type: </span><select class = "combobox" ng-model=p.customerPurchaseParams.byType> 
+  <option value="RESTAURANTS" ng-model="p.customerPurchaseParams.byType">Restaurants</option>
+  <option value="ELECTRICITY" ng-model="p.customerPurchaseParams.byType">Electricity</option>
+  <option value="FOOD" ng-model="p.customerPurchaseParams.byType">Food</option>
+  <option value="HEALTH" ng-model="p.customerPurchaseParams.byType">Health</option>
+  <option value="SPORTS" ng-model="p.customerPurchaseParams.byType">Sports</option>
+  <option value="CAMPING" ng-model="p.customerPurchaseParams.byType">Camping</option>
+  <option value="TRAVELLING" ng-model="p.customerPurchaseParams.byType">Travelling</option>
+  <option value="SHOPPING" ng-model="p.customerPurchaseParams.byType">Shopping</option>
+  <option value="STYLE" ng-model="p.customerPurchaseParams.byType">Style</option>
+  <option value="KITCHEN" ng-model="p.customerPurchaseParams.byType">Kitchen</option>
+  <option value="TECH" ng-model="p.customerPurchaseParams.byType">Tech</option>
+  <option value="" ng-model="p.customerPurchaseParams.byType">All</option>
+		</select>
+	<span class = "smallInput">
+	price:	<input type ="number" ng-model="p.customerPurchaseParams.byPrice"> 
+	</span>
+		*You can either filter by type OR by price.
+	</div>
+	<ul><span class = "searchBox">
+	 <label>Search For Coupon Title: </label> <input type = "text" ng-model = "title" /></br></br></br>
+	</span>
+	<div class = "errorMessage">{{p.pageError}}</div>
+		<li class= "customerShoppingBox" ng-repeat="coupon in p.allExistingCoupons | filter: title">
+<div class = "shoppingImageWrapper">
+		<img class = "shoppingCouponImage" src="{{coupon.image}}" >
+</div>
+	<span class = "couponTitle">{{coupon.title}}</span> 
+				<hr class = "hr">
+	<div class= "toppad"><button class = "moreDetailsButton" ng-click="p.toggleCouponDetails(coupon)">More Details...</button></div>
+			<div class = "couponDetailWrapper" ng-show="coupon.details">
+				<label>ID:	{{coupon.id}}</label>
+				<label>Category: {{coupon.type | lowercase}}</label>
+				<label>Start Date: {{coupon.startDate | date:'yyyy-MM-dd'}}</label>
+				<label>End Date: {{coupon.endDate | date:'yyyy-MM-dd'}}</label></br>
+				<label>Price: {{coupon.price}}$</label></br>
+				<label>Message: {{coupon.message}}</label></br>
+				<label>Amount: {{coupon.amount}}</label></br>		
+				<label>Price: {{coupon.price}}</label>
+				<button class = "purchaseButton" ng-click="p.purchaseCoupon(coupon)">Buy Now</button>
+			</div>
+		</li>
+	</ul>
+	</div>
+<div class="spaceFiller"></div>
+	<button class = "catalogueBtn upperCenterPos" ng-click="p.showPurchasedCpnBtn()">Purchased Coupons</button>
+	<div class = "listContainer" ng-show="p.showPurchasedDiv">
+	<span class = "searchBox"><label>Search For Coupon Title: </label> <input type = "text" ng-model = "title" /></span> 
+	<button class = "submitbutton" ng-click = "p.purchasedCouponsPreviousPage()">Previous Page</button> <button class = "submitbutton" ng-click = "p.purchasedCouponsNextPage()">Next Page</button>
+	<div class = "errorMessage">{{p.custManagePageError}}</div>
+	<ul>
+		<li class= "listBox" ng-repeat="coupon in p.allPurchasedCoupons | filter: title">
+	<span class = "couponTitle">{{coupon.title}}</span> </br>
+		<button class = "moreDetailsButton" ng-click="p.toggleCouponDetails(coupon)">More Details...</button>
+			<div class = "collapse" ng-show="coupon.details">
+				<label>ID:	{{coupon.id}}</label>
+				<label>Category: {{coupon.type | lowercase}}</label>
+				<label>Start Date: {{coupon.startDate | date:'yyyy-MM-dd'}}</label>
+				<label>End Date: {{coupon.endDate | date:'yyyy-MM-dd'}}</label></br>
+				
+				<label>Price: {{coupon.price}}$</label>
+			</div>
+		</li>
+	</ul>
+	
+		</div>	
+		<div class = "spaceFiller">
+		<hr>
+		</div>
+		<button class = "catalogueBtn upperCenterPos" ng-click="p.custIncomeBtn()">View Payments</button>
+	<div class = "listContainer" ng-show="p.showCustIncome">
+		<li class = "listBox" ng-repeat="income in p.custIncome">
+		<label>
+		Payment Details:</br>
+		</label>
+<label>
+		ID: {{income.id}} Payment Type: {{income.type}} Time: {{income.timestamp | date: 'yyyy-MM-dd HH:mm:ss' }} Amount Spent: {{income.amount}}
+</label>
+</li>	
+		</div>		
+	<button class = "submitbutton posRight" ng-click="p.customerLogout()">Log Out</button>
+		</div>	
+	
+
+<hr/>
+<div class="infoMessage">{{p.infoMessage}}</div>
+<div class="errorMessage">{{p.errorMessage}}</div>
+</div>
+</body>
+</html>
